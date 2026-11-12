@@ -37,7 +37,6 @@
 - Vite
 - Tailwind CSS v4
 - dayjs
-- Lucide React
 - GitHub Actions / GitHub Pages
 
 ## 工夫した点・苦労した点
