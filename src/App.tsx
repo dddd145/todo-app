@@ -30,9 +30,8 @@ export default function App() {
 
   const [filterCategory, setFilterCategory] = useState<string>('すべて');
   const [filterStatus, setFilterStatus] = useState<'すべて' | '未完了' | '完了'>('未完了');
-  const [sortBy, setSortBy] = useState<'date' | 'priority'>('date'); // ソート順 (date: 日付順, priority: 優先度順)
+  const [sortBy, setSortBy] = useState<'date' | 'priority'>('date'); 
 
-  // LocalStorage 保存
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_TODOS, JSON.stringify(todos));
   }, [todos]);
@@ -41,7 +40,6 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_CATS, JSON.stringify(categories));
   }, [categories]);
 
-  // 新規カテゴリ追加
   const handleAddCategory = (newCat: string) => {
     if (!categories.includes(newCat)) {
       setCategories([...categories, newCat]);
@@ -66,7 +64,6 @@ export default function App() {
     setTodos(todos.filter(t => t.id !== id));
   };
 
-  // フィルタリングとソート（通常: 日付順、優先度順: 同優先度では日付が近い方）
   const filteredTodos = todos
     .filter(todo => filterCategory === 'すべて' || todo.category === filterCategory)
     .filter(todo => {
@@ -76,14 +73,11 @@ export default function App() {
     })
     .sort((a, b) => {
       if (sortBy === 'priority') {
-        // 優先度高い順（5 -> 1）
         if (b.priority !== a.priority) {
           return b.priority - a.priority;
         }
-        // 同優先度の場合は日付が近い順
         return dayjs(a.dueDate).valueOf() - dayjs(b.dueDate).valueOf();
       }
-      // 通常（日付昇順）
       return dayjs(a.dueDate).valueOf() - dayjs(b.dueDate).valueOf();
     });
 
@@ -125,7 +119,7 @@ export default function App() {
               className="p-1.5 border border-gray-300 rounded-lg bg-white font-medium"
             >
               <option value="date">日付順</option>
-              <option value="priority">優先度順 (同優先度は日付順)</option>
+              <option value="priority">優先度順</option>
             </select>
 
             {/* カテゴリ絞り込み */}

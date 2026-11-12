@@ -12,14 +12,12 @@ interface TodoItemProps {
 export const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete }) => {
   const isExpired = !todo.completed && dayjs(todo.dueDate).isBefore(dayjs(), 'day');
 
-  // 削除ボタンクリック時に確認ダイアログを挟む
   const handleDeleteClick = () => {
     if (window.confirm(`「${todo.title}」を削除してもよろしいですか？`)) {
       onDelete(todo.id);
     }
   };
 
-  // 優先度に応じたバッジ色
   const priorityBadge = {
     5: 'bg-red-100 text-red-700 border-red-200',
     4: 'bg-orange-100 text-orange-700 border-orange-200',
