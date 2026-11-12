@@ -13,7 +13,7 @@
 | :---: | :---: |
 | ![メイン画面](./docs/screenshots/01_main.png) | ![タスクの追加](./docs/screenshots/02_form.png) |
 
-| 期限切れの警告表示 | 絞り込み・並び替え | スマホ画面での表示 |
+| 警告表示 | 並び替え | スマホ画面 |
 | :---: | :---: | :---: |
 | ![期限切れの警告表示](./docs/screenshots/03_alert.png) | ![絞り込み・並び替え](./docs/screenshots/04_filter.png) | ![スマホ画面での表示](./docs/screenshots/05_mobile.png) |
 
