@@ -1,12 +1,10 @@
-export type Priority = '高' | '中' | '低';
-export type Category = '大学課題' | '就活' | 'アルバイト' | 'プライベート';
-
+export type Priority = 1 | 2 | 3 | 4 | 5;
 export interface Todo {
   id: string;
   title: string;
-  category: Category;
+  category: string;
   priority: Priority;
-  dueDate: string; // YYYY-MM-DD
+  dueDate: string;
   completed: boolean;
   createdAt: string;
 }

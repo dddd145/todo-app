@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { Trash2, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
-import { Todo } from '../types';
+import type { Todo } from '../types';
 
 interface TodoItemProps {
   todo: Todo;
@@ -12,10 +12,20 @@ interface TodoItemProps {
 export const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete }) => {
   const isExpired = !todo.completed && dayjs(todo.dueDate).isBefore(dayjs(), 'day');
 
+  // 削除ボタンクリック時に確認ダイアログを挟む
+  const handleDeleteClick = () => {
+    if (window.confirm(`「${todo.title}」を削除してもよろしいですか？`)) {
+      onDelete(todo.id);
+    }
+  };
+
+  // 優先度に応じたバッジ色
   const priorityBadge = {
-    高: 'bg-red-100 text-red-700 border-red-200',
-    中: 'bg-amber-100 text-amber-800 border-amber-200',
-    低: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    5: 'bg-red-100 text-red-700 border-red-200',
+    4: 'bg-orange-100 text-orange-700 border-orange-200',
+    3: 'bg-amber-100 text-amber-800 border-amber-200',
+    2: 'bg-blue-100 text-blue-700 border-blue-200',
+    1: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   }[todo.priority];
 
   return (
@@ -30,14 +40,16 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo, onToggle, onDelete }) 
           </span>
           <div className="flex flex-wrap gap-2 mt-1 text-xs">
             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">{todo.category}</span>
-            <span className={`px-2 py-0.5 rounded-md border font-medium ${priorityBadge}`}>{todo.priority}</span>
+            <span className={`px-2 py-0.5 rounded-md border font-medium ${priorityBadge}`}>
+              優先度 {todo.priority}
+            </span>
             <span className={`flex items-center gap-1 font-medium ${isExpired ? 'text-red-600' : 'text-gray-500'}`}>
               {isExpired && <AlertTriangle size={13} className="animate-bounce" />} 期限: {todo.dueDate}
             </span>
           </div>
         </div>
       </div>
-      <button onClick={() => onDelete(todo.id)} className="text-gray-400 hover:text-red-500 p-1.5 shrink-0 ml-2 cursor-pointer transition-colors">
+      <button onClick={handleDeleteClick} className="text-gray-400 hover:text-red-500 p-1.5 shrink-0 ml-2 cursor-pointer transition-colors">
         <Trash2 size={18} />
       </button>
     </div>

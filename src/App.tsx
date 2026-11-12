@@ -1,23 +1,52 @@
 import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { Todo, Category } from './types';
+import 'dayjs/locale/ja';
+import type { Todo } from './types';
 import { TodoForm } from './components/TodoForm';
 import { TodoItem } from './components/TodoItem';
 
-const STORAGE_KEY = 'pg3_custom_todo_app';
+dayjs.locale('ja');
+
+const STORAGE_KEY_TODOS = 'pg3_custom_todo_app';
+const STORAGE_KEY_CATS = 'pg3_custom_todo_categories';
 
 export default function App() {
   const [todos, setTodos] = useState<Todo[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY_TODOS);
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [filterCategory, setFilterCategory] = useState<Category | 'すべて'>('すべて');
+  const [categories, setCategories] = useState<string[]>(() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_CATS);
+    const parsed = saved ? JSON.parse(saved) : null;
+    return Array.isArray(parsed) && parsed.length > 0
+      ? parsed
+      : ['課題', 'アルバイト', 'プライベート'];
+  } catch {
+    return ['課題', 'アルバイト', 'プライベート'];
+  }
+});
+
+  const [filterCategory, setFilterCategory] = useState<string>('すべて');
   const [filterStatus, setFilterStatus] = useState<'すべて' | '未完了' | '完了'>('未完了');
+  const [sortBy, setSortBy] = useState<'date' | 'priority'>('date'); // ソート順 (date: 日付順, priority: 優先度順)
+
+  // LocalStorage 保存
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_TODOS, JSON.stringify(todos));
+  }, [todos]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-  }, [todos]);
+    localStorage.setItem(STORAGE_KEY_CATS, JSON.stringify(categories));
+  }, [categories]);
+
+  // 新規カテゴリ追加
+  const handleAddCategory = (newCat: string) => {
+    if (!categories.includes(newCat)) {
+      setCategories([...categories, newCat]);
+    }
+  };
 
   const handleAddTodo = (newTodoData: Omit<Todo, 'id' | 'completed' | 'createdAt'>) => {
     const newTodo: Todo = {
@@ -37,6 +66,7 @@ export default function App() {
     setTodos(todos.filter(t => t.id !== id));
   };
 
+  // フィルタリングとソート（通常: 日付順、優先度順: 同優先度では日付が近い方）
   const filteredTodos = todos
     .filter(todo => filterCategory === 'すべて' || todo.category === filterCategory)
     .filter(todo => {
@@ -44,18 +74,36 @@ export default function App() {
       if (filterStatus === '完了') return todo.completed;
       return true;
     })
-    .sort((a, b) => dayjs(a.dueDate).valueOf() - dayjs(b.dueDate).valueOf());
+    .sort((a, b) => {
+      if (sortBy === 'priority') {
+        // 優先度高い順（5 -> 1）
+        if (b.priority !== a.priority) {
+          return b.priority - a.priority;
+        }
+        // 同優先度の場合は日付が近い順
+        return dayjs(a.dueDate).valueOf() - dayjs(b.dueDate).valueOf();
+      }
+      // 通常（日付昇順）
+      return dayjs(a.dueDate).valueOf() - dayjs(b.dueDate).valueOf();
+    });
 
   return (
     <div className="min-h-screen bg-slate-100 py-10 px-4 text-gray-800">
       <div className="max-w-2xl mx-auto">
-        <header className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-slate-800">🎓 学生生活 タスク＆課題管理</h1>
-          <p className="text-sm text-slate-500 mt-1">講義の提出期限・就活・日常のタスクを一元管理</p>
+        <header className="mb-6 flex justify-between items-center pb-2 border-b border-gray-200">
+          <h1 className="text-xl font-bold text-slate-800">Todo管理ソフト</h1>
+          <p className="text-sm text-slate-500 font-medium">
+            {dayjs().format('YYYY年MM月DD日 (ddd)')}
+          </p>
         </header>
 
-        <TodoForm onAdd={handleAddTodo} />
+        <TodoForm
+          categories={categories}
+          onAdd={handleAddTodo}
+          onAddCategory={handleAddCategory}
+        />
 
+        {/* コントロールエリア (フィルター & ソート切り替え) */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4 bg-white p-3 rounded-xl border border-gray-200 shadow-xs">
           <div className="flex gap-1 text-sm">
             {(['すべて', '未完了', '完了'] as const).map(status => (
@@ -69,23 +117,36 @@ export default function App() {
             ))}
           </div>
 
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value as Category | 'すべて')}
-            className="text-sm p-1.5 border border-gray-300 rounded-lg bg-white"
-          >
-            <option value="すべて">全カテゴリ</option>
-            <option value="大学課題">大学課題</option>
-            <option value="就活">就活</option>
-            <option value="アルバイト">アルバイト</option>
-            <option value="プライベート">プライベート</option>
-          </select>
+          <div className="flex gap-2 text-sm">
+            {/* ソート順の選択 */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'date' | 'priority')}
+              className="p-1.5 border border-gray-300 rounded-lg bg-white font-medium"
+            >
+              <option value="date">日付順</option>
+              <option value="priority">優先度順 (同優先度は日付順)</option>
+            </select>
+
+            {/* カテゴリ絞り込み */}
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="p-1.5 border border-gray-300 rounded-lg bg-white"
+            >
+              <option value="すべて">全カテゴリ</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
+        {/* Todo 一覧 */}
         <div>
           {filteredTodos.length === 0 ? (
             <div className="text-center bg-white border border-gray-200 rounded-xl p-8 text-gray-400">
-              該当するタスクはありません。
+              該当する予定はありません。
             </div>
           ) : (
             filteredTodos.map(todo => (
